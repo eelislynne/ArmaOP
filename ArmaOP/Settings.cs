@@ -17,12 +17,10 @@ namespace ArmaOP {
         public string GitToken;
         public int GitType; // 1 = GitHub, 2 = GitLab, implement ur own if u need
         public string ServerPath;
-        public bool UseObfuSQF;
+        public PackingMethod PackingMethod;
         public bool ObfuSQFMission;
+        public string SqfSafeProfile;
         public bool OneLine;
-        public bool RenameFuncs;
-        public bool RenameGlobalVars;
-        public bool RenameLocalVars;
     }
 
     class Settings {
@@ -31,20 +29,35 @@ namespace ArmaOP {
         public string GitDirectory;
         public string MaverickDirectory;
         public string ObfuSQFDirectory;
+        public string SqfSafeDirectory;
+        public string ToolsDirectory;
         public string FunctionsTag;
         public int RandomFuncsLength;
         public int RandomVarsLength;
         public string ObfuSQFToken;
+        public string SqfSafeToken;
         public bool UseArmaRemoteAdmin;
         public bool StartARAIfFail;
         public bool KillArmaServer;
+        public bool StartArma;
         public bool Use64BitServer;
+        public string ServerParams;
         public List<string> ObfLocalVars;
         public List<string> ObfGlobalVars;
         public List<string> ObfFunctions;
+        public bool RenameFuncs;
+        public bool RenameGlobalVars;
+        public bool RenameLocalVars;
         public List<ServerMod> Mods;
 
     }
+
+    enum PackingMethod
+    {
+        Normal = 1,
+        ObfuSQF,
+        SqfSafe
+    };
 
     class SettingsManager {
         private static string _configPath = "settings.json";
@@ -55,14 +68,22 @@ namespace ArmaOP {
             s.GitDirectory = "C:\\Github";
             s.MaverickDirectory = "C:\\ArmaRemoteAdmin";
             s.ObfuSQFDirectory = "C:\\ObfuSQFCMD";
+            s.SqfSafeDirectory = "C:\\SqfSafeCLI";
+            s.ToolsDirectory = "C:\\ArmaTools";
             s.FunctionsTag = "life";
             s.RandomFuncsLength = 8;
             s.RandomVarsLength = 8;
             s.ObfuSQFToken = "0000-0000-0000-0000";
+            s.SqfSafeToken = "0000-0000-0000-0000";
             s.UseArmaRemoteAdmin = false;
             s.StartARAIfFail = false;
             s.KillArmaServer = false;
+            s.StartArma = true;
             s.Use64BitServer = true;
+            s.ServerParams = "";
+            s.RenameFuncs = false;
+            s.RenameGlobalVars = false;
+            s.RenameLocalVars = false;
             s.ObfLocalVars = new List<string>();
             s.ObfGlobalVars = new List<string>();
             s.ObfFunctions = new List<string>();
@@ -76,12 +97,11 @@ namespace ArmaOP {
                 GitToken = "xxxxx",
                 GitType = 1,
                 ServerPath = "C:\\Arma3\\@life_server\\addons\\server.pbo",
-                UseObfuSQF = false,
+                PackingMethod = PackingMethod.Normal,
                 ObfuSQFMission = true,
+                SqfSafeProfile = "",
                 OneLine = false,
-                RenameFuncs = false,
-                RenameGlobalVars = false,
-                RenameLocalVars = false
+                
             });
 
             s.Mods = mods;
