@@ -8,9 +8,9 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("Arma OP Obfuscator")]
 [assembly: AssemblyDescription("A obfuscator made for Arma-Life")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Travis Butts")]
+[assembly: AssemblyCompany("Fini & Jimbo")]
 [assembly: AssemblyProduct("Arma OP Obfuscator")]
-[assembly: AssemblyCopyright("Copyright ©  2018 Travis Butts")]
+[assembly: AssemblyCopyright("")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

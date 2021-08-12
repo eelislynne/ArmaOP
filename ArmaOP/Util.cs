@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using LibGit2Sharp;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -9,6 +10,8 @@ using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+
+
 
 namespace ArmaOP {
     class Util {
@@ -60,6 +63,7 @@ namespace ArmaOP {
             if (pulledGits.Contains(sm.GitUrl.ToLower())) {
                 return true;
             }
+
             pulledGits.Add(sm.GitUrl.ToLower());
 
             Console.WriteLine("");
@@ -69,52 +73,82 @@ namespace ArmaOP {
 
                 string token = sm.GitToken.Replace("token ", "");
 
-                string gitPath = Path.Combine(Program.Settings.GitDirectory + "/git.zip");
+                string gitName = Path.GetFileNameWithoutExtension(sm.GitUrl);
+                string gitPath = Path.Combine(Program.Settings.GitDirectory, gitName);
                 
                 if (!Directory.Exists(Program.Settings.GitDirectory)) {
                     Directory.CreateDirectory(Program.Settings.GitDirectory);
                 }
-                
 
-                using (WebClient wc = new WebClient()) {
-                    if (sm.GitType == 1) {
-                        wc.Headers.Add("Authorization", "token " + token);
-                        Console.WriteLine($"{sm.Name} using GitHub");
-                    } else if (sm.GitType == 2) {
-                        wc.Headers.Add("Private-Token", token);
-                        Console.WriteLine($"{sm.Name} using GitLab");
-                    } else {
-                        throw new Exception("Unknown git type! 1 = GitHub, 2 = GitLab");
+                // This options allows you to use the SSH option. (Allows for Repo specific auth)
+                if (sm.GitType == 3)
+                {
+                    if (Directory.Exists(gitPath))
+                    {
+                        return true;
                     }
-                    wc.DownloadFile(sm.GitUrl, gitPath);
+
+                    string branch = "";
+
+                    if (sm.GitPath != "")
+                    {
+                        branch = $" -b {sm.GitPath}";
+                    }
+
+                    Process.Start(new ProcessStartInfo
+                    {
+                        WorkingDirectory = Program.Settings.GitDirectory,
+                        FileName = "git",
+                        Arguments = $"clone --depth=1{branch} {sm.GitUrl}",
+                        UseShellExecute = false,
+                        CreateNoWindow = true
+
+                    }).WaitForExit();
+
+                    Program.DeleteDirectory(Path.Combine(Program.Settings.GitDirectory, gitName, ".git"));
+
+                    return true;
                 }
+
 
                 if (Directory.Exists(Path.Combine(Program.Settings.GitDirectory, sm.GitPath))) {
                     Directory.Delete(Program.Settings.GitDirectory, true);
                 }
                 Directory.CreateDirectory(Program.Settings.GitDirectory);
 
-                // very dirty hack for gitlab stupid file bullshit
                 if (sm.GitType == 2) {
 
-                    using (ZipArchive archive = ZipFile.OpenRead(gitPath)) {
 
-                        string folderName = archive.Entries[0].FullName;
-                        
-                        foreach (ZipArchiveEntry entry in archive.Entries.Skip(1)) {
-
-                            string name = Program.Settings.GitDirectory + "/" + entry.FullName.Replace(folderName, "");
-                            if (entry.FullName.EndsWith("/")) {
-                                Directory.CreateDirectory(name);
-                            } else {
-                                entry.ExtractToFile(name);
-                            }
-
-                        }
+                    CloneOptions co = new CloneOptions
+                    {
+                        CredentialsProvider = (_url, _user, _cred) =>
+                             new UsernamePasswordCredentials
+                             {
+                                 Username = "User",
+                                 Password = sm.GitToken
+                             }
+                    };
+                    if (sm.GitPath != "")
+                    {
+                        co.BranchName = sm.GitPath;
                     }
+                    Repository.Clone(sm.GitUrl, gitPath, co);
 
                 } else {
-                    ZipFile.ExtractToDirectory(gitPath, Program.Settings.GitDirectory); // github :)
+                    CloneOptions co = new CloneOptions
+                    {
+                        CredentialsProvider = (_url, _user, _cred) =>
+                             new UsernamePasswordCredentials
+                             {
+                                 Username = sm.GitToken,
+                                 Password = string.Empty
+                             }
+                    };
+                    if (sm.GitPath != "")
+                    {
+                        co.BranchName = sm.GitPath;
+                    }
+                    Repository.Clone(sm.GitUrl, gitPath, co);
                 }
 
                 return true;
@@ -124,6 +158,7 @@ namespace ArmaOP {
             }
         }
 
+        
         public static string RenameVars(string contents, Dictionary<string, string> vars) {
 
             StringBuilder sb = new StringBuilder(contents);
